@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador NBR 12721</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .tab-button.active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            border-bottom-color: white;
+            z-index: 10;
+            transform: translateY(2px);
+        }
+        .table-input {
+            width: 100%;
+            min-width: 80px;
+            padding: 4px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 0.875rem;
+        }
+        .table-input-text {
+             width: 100%;
+             min-width: 120px;
+             padding: 4px;
+             border: 1px solid #d1d5db;
+             border-radius: 4px;
+             text-align: left;
+             font-size: 0.875rem;
+        }
+        .calculated-cell {
+            padding: 4px;
+            font-weight: 600;
+            color: #1d4ed8;
+            background-color: #eff6ff;
+            text-align: right;
+            white-space: nowrap;
+        }
+        /* Estilos para o ícone de informação e tooltip */
+        .info-icon {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-left: 4px;
+            color: #6b7280;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            font-weight: normal;
+            line-height: 1.4;
+            text-transform: none;
+        }
+        .info-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .column-number {
+            background-color: #e5e7eb;
+            font-weight: 700;
+            color: #374151;
+        }
+        .valid {
+            color: #059669 !important; /* Green */
+        }
+        .invalid {
+            color: #dc2626 !important; /* Red */
+            border-color: #dc2626 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+
+    <div class="max-w-screen-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <header class="bg-blue-600 text-white p-6">
+            <h1 class="text-2xl font-bold">▶ Ferramenta de Verificação de Quadros - NBR 12721</h1>
+            <p class="text-blue-200">Análise e qualificação para Cartórios de Registro de Imóveis</p>
+        </header>
+
+        <!-- Configurador Inicial -->
+        <section id="configurador-inicial" class="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Configurador (Alvará e Plantas)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                <div>
+                    <label for="area-lote" class="block text-sm font-medium text-gray-600">Área do Lote (m²)</label>
+                    <input type="text" inputmode="decimal" id="area-lote" placeholder="0,00" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="area-alvara" class="block text-sm font-medium text-gray-600">Área Construída Total (Alvará)</label>
+                    <input type="text" inputmode="decimal" id="area-alvara" placeholder="0,00" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="num-total-pavimentos" class="block text-sm font-medium text-gray-600">Número Total de Pavimentos</label>
+                    <input type="number" id="num-total-pavimentos" placeholder="Ex: 12" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <button id="btn-configurar-pavimentos" class="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Configurar Pavimentos</button>
+                </div>
+            </div>
+            <div id="detalhes-pavimentos-container" class="mt-6 space-y-4">
+                </div>
+            <div id="gerar-quadros-container" class="mt-6 text-right" style="display: none;">
+                 <button id="btn-gerar-quadros" class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Gerar Estrutura dos Quadros</button>
+            </div>
+        </section>
+
+        <!-- Navegação por Abas -->
+        <nav class="border-b-2 border-gray-300 px-4">
+            <button class="tab-button active text-lg font-semibold py-3 px-5 border-b-2 border-transparent -mb-0.5" data-tab="quadro1" onclick="openTab('quadro1')">Quadro I</button>
+            <button class="tab-button text-lg font-semibold py-3 px-5 border-b-2 border-transparent -mb-0.5" data-tab="quadro2" onclick="openTab('quadro2')">Quadro II</button>
+            <button class="tab-button text-lg font-semibold py-3 px-5 border-b-2 border-transparent -mb-0.5" data-tab="quadro3" onclick="openTab('quadro3')">Quadro III</button>
+        </nav>
+        
+        <main class="p-6">
+            <!-- ======================= QUADRO I ======================= -->
+            <div id="quadro1" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-700 mb-4">Quadro I: Cálculo das Áreas nos Pavimentos e da Área Global</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 text-xs">
+                        <thead class="bg-gray-100 text-gray-600 uppercase text-center">
+                            <tr>
+                                <th rowspan="4" class="p-2 border align-bottom">Pavimento</th>
+                                <th colspan="10" class="p-2 border">Áreas de Divisão Não Proporcional</th>
+                                <th colspan="5" class="p-2 border">Áreas de Divisão Proporcional</th>
+                                <th colspan="2" rowspan="2" class="p-2 border align-bottom">Área do Pavimento</th>
+                                <th rowspan="4" class="p-2 border align-bottom">Qtd. Pav.<br>Idênticos</th>
+                            </tr>
+                            <tr>
+                                <th colspan="5" class="p-2 border">Área Privativa</th>
+                                <th colspan="5" class="p-2 border">Área de Uso Comum</th>
+                                <th colspan="5" class="p-2 border">Área de Uso Comum</th>
+                            </tr>
+                            <tr>
+                                <th rowspan="2" class="p-2 border">
+                                    Coberta<br>Padrão
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas cobertas de padrão normal das unidades no pavimento, conforme quadro de áreas da planta.</span></div>
+                                </th>
+                                <th colspan="2" class="p-2 border">Coberta Padrão<br>Diferente ou<br>Descoberta</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border">
+                                    Coberta<br>Padrão
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área comum coberta de uma unidade (ex: vaga específica).</span></div>
+                                </th>
+                                <th colspan="2" class="p-2 border">Coberta Padrão<br>Diferente ou<br>Descoberta</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border">
+                                    Coberta<br>Padrão
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Áreas comuns a todos (ex: hall, escadas, guarita).</span></div>
+                                </th>
+                                <th colspan="2" class="p-2 border">Coberta Padrão<br>Diferente ou<br>Descoberta</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border align-bottom">
+                                    Real (5+10+15)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">É a soma de TODAS as áreas reais (físicas) do pavimento.</span></div>
+                                </th>
+                                <th rowspan="2" class="p-2 border align-bottom">
+                                    Equivalente (6+11+16)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma de TODAS as áreas de cálculo do pavimento.</span></div>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th class="p-2 border">
+                                    Real
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área descoberta exclusiva da unidade, área externa ou quintal.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv.
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área de cálculo para orçar espaços com custos diferentes.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real (2+3)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma de todas as áreas reais privativas do pavimento (coberta e descoberta).</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv. (2+4)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas privativas (padrão e equivalentes) por pavimento.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área comum descoberta de uma unidade (ex: vaga sem cobertura).</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv.
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área de cálculo para orçar os espaços da coluna 8.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real (7+8)
+                                     <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas reais das colunas 7 e 8.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv. (7+9)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas de cálculo das colunas 7 e 9.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Áreas comuns a todos que são descobertas (jardins, playground).</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv.
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área de cálculo para orçar os espaços da coluna 13.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real (12+13)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas reais das colunas 12 e 13.</span></div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv. (12+14)
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Soma das áreas de cálculo das colunas 12 e 14.</span></div>
+                                </th>
+                            </tr>
+                            <tr class="column-number">
+                                <th class="p-1 border">(1)</th>
+                                <th class="p-1 border">(2)</th>
+                                <th class="p-1 border">(3)</th>
+                                <th class="p-1 border">(4)</th>
+                                <th class="p-1 border">(5)</th>
+                                <th class="p-1 border">(6)</th>
+                                <th class="p-1 border">(7)</th>
+                                <th class="p-1 border">(8)</th>
+                                <th class="p-1 border">(9)</th>
+                                <th class="p-1 border">(10)</th>
+                                <th class="p-1 border">(11)</th>
+                                <th class="p-1 border">(12)</th>
+                                <th class="p-1 border">(13)</th>
+                                <th class="p-1 border">(14)</th>
+                                <th class="p-1 border">(15)</th>
+                                <th class="p-1 border">(16)</th>
+                                <th class="p-1 border">(17)</th>
+                                <th class="p-1 border">(18)</th>
+                                <th class="p-1 border"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="quadro1-tbody">
+                            </tbody>
+                        <tfoot id="quadro1-tfoot" class="bg-gray-200 font-bold text-gray-700 text-center">
+                            <tr>
+                                <td class="p-2 border">TOTAIS</td>
+                                <td id="total-col-2" class="p-2 border">0,00</td>
+                                <td id="total-col-3" class="p-2 border">0,00</td>
+                                <td id="total-col-4" class="p-2 border">0,00</td>
+                                <td id="total-col-5" class="p-2 border">0,00</td>
+                                <td id="total-col-6" class="p-2 border">0,00</td>
+                                <td id="total-col-7" class="p-2 border">0,00</td>
+                                <td id="total-col-8" class="p-2 border">0,00</td>
+                                <td id="total-col-9" class="p-2 border">0,00</td>
+                                <td id="total-col-10" class="p-2 border">0,00</td>
+                                <td id="total-col-11" class="p-2 border">0,00</td>
+                                <td id="total-col-12" class="p-2 border">0,00</td>
+                                <td id="total-col-13" class="p-2 border">0,00</td>
+                                <td id="total-col-14" class="p-2 border">0,00</td>
+                                <td id="total-col-15" class="p-2 border">0,00</td>
+                                <td id="total-col-16" class="p-2 border">0,00</td>
+                                <td id="total-col-17" class="p-2 border">0,00</td>
+                                <td id="total-col-18" class="p-2 border">0,00</td>
+                                <td class="p-2 border"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="mt-6 p-4 bg-gray-100 rounded-lg text-right">
+                    <span class="text-lg font-semibold text-gray-700 mr-6">Validação Térreo/Lote: <span id="validacao-lote-q1" class="text-blue-700">OK</span></span>
+                    <span class="text-lg font-semibold text-gray-700 mr-6">Área Construída: <span id="area-construida-q1" class="text-blue-700">0,00 m²</span></span>
+                    <span class="text-lg font-semibold text-gray-700 mr-6">Área Real Global: <span id="area-real-global" class="text-blue-700">0,00 m²</span></span>
+                    <span class="text-lg font-semibold text-gray-700">Área Equivalente Global: <span id="area-equiv-global" class="text-blue-700">0,00 m²</span></span>
+                </div>
+            </div>
+
+            <div id="quadro2" class="tab-content" style="display:none;">
+                 <h2 class="text-xl font-semibold text-blue-700 mb-4">Quadro II: Cálculo das Áreas das Unidades Autônomas</h2>
+                 <div id="ferramentas-rapidas-container-q2" class="p-4 mb-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
+                    <h3 class="font-semibold text-gray-800">Ferramentas de Preenchimento Rápido</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label for="valor-padrao-20" class="block text-sm font-medium text-gray-700">Área das unidades (Coluna 20)</label>
+                            <div class="flex">
+                                <input type="text" inputmode="decimal" id="valor-padrao-20" placeholder="Ex: 50,00" class="table-input rounded-r-none">
+                                <button id="btn-aplicar-20" class="px-4 py-1 bg-blue-600 text-white font-semibold rounded-r-md hover:bg-blue-700">Aplicar</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                             <label class="block text-sm font-medium text-gray-700">Vaga de Garagem (Colunas 25, 26, 27)</label>
+                             <div class="flex space-x-2">
+                                <input type="text" inputmode="decimal" id="valor-padrao-25" placeholder="Col 25" class="table-input">
+                                <input type="text" inputmode="decimal" id="valor-padrao-26" placeholder="Col 26" class="table-input">
+                                <input type="text" inputmode="decimal" id="valor-padrao-27" placeholder="Col 27" class="table-input">
+                                <button id="btn-aplicar-vaga" class="px-4 py-1 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">Aplicar</button>
+                             </div>
+                        </div>
+                    </div>
+                 </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 text-xs">
+                        <thead class="bg-gray-100 text-gray-600 uppercase text-center">
+                            <tr>
+                                <th rowspan="4" class="p-2 border align-bottom"><input type="checkbox" id="selecionar-todos-q2" class="h-4 w-4"></th>
+                                <th rowspan="4" class="p-2 border align-bottom">Unidade</th>
+                                <th colspan="11" class="p-2 border">Áreas de Divisão Não Proporcional</th>
+                                <th rowspan="4" class="p-2 border align-bottom">
+                                    Coeficiente<br>de<br>Proporc.
+                                    <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="31" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="31" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th colspan="5" class="p-2 border">Áreas de Divisão Proporcional</th>
+                                <th colspan="2" rowspan="2" class="p-2 border align-bottom">Área da Unidade</th>
+                                <th rowspan="4" class="p-2 border align-bottom">Qtd. Unid.<br>Idênticas</th>
+                            </tr>
+                            <tr>
+                                <th colspan="5" class="p-2 border">Área Privativa</th>
+                                <th colspan="5" class="p-2 border">Área de Uso Comum</th>
+                                <th rowspan="3" class="p-2 border align-bottom">Área Total<br>Equivalente<br>(Não Prop.) (24+29)</th>
+                                <th colspan="5" class="p-2 border">Área de Uso Comum</th>
+                            </tr>
+                            <tr>
+                                <th rowspan="2" class="p-2 border">
+                                    Coberta<br>Padrão
+                                    <div class="info-icon">ⓘ<span class="tooltip-text">Área coberta de cada unidade, constante no quadro de área da planta do empreendimento.</span></div>
+                                </th>
+                                <th colspan="2" class="p-2 border">Outras</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border">Coberta<br>Padrão</th>
+                                <th colspan="2" class="p-2 border">Outras</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border align-bottom">
+                                    Coberta<br>Padrão
+                                    <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="32" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="32" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th colspan="2" class="p-2 border">Outras</th>
+                                <th colspan="2" class="p-2 border">Totais</th>
+                                <th rowspan="2" class="p-2 border align-bottom">
+                                    Real
+                                    <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="37" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="37" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th rowspan="2" class="p-2 border align-bottom">
+                                    Equiv.
+                                    <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="38" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="38" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th class="p-2 border">Real</th>
+                                <th class="p-2 border">Equiv.</th>
+                                <th class="p-2 border">Real (20+21)</th>
+                                <th class="p-2 border">Equiv. (20+22)</th>
+                                <th class="p-2 border">Real</th>
+                                <th class="p-2 border">Equiv.</th>
+                                <th class="p-2 border">Real (25+26)</th>
+                                <th class="p-2 border">Equiv. (25+27)</th>
+                                <th class="p-2 border">
+                                    Real
+                                     <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="33" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="33" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv.
+                                     <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="34" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="34" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th class="p-2 border">
+                                    Real (32+33)
+                                     <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="35" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="35" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                                <th class="p-2 border">
+                                    Equiv. (32+34)
+                                     <div class="flex items-center justify-center mt-1 normal-case text-gray-700">
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-l hover:bg-gray-400 font-bold" data-col="36" data-action="dec">-</button>
+                                        <button class="px-2 py-0.5 bg-gray-300 rounded-r hover:bg-gray-400 font-bold" data-col="36" data-action="inc">+</button>
+                                        <div class="info-icon">ⓘ<span class="tooltip-text">Quantidade de casas decimais.</span></div>
+                                    </div>
+                                </th>
+                            </tr>
+                             <tr class="column-number">
+                                <th class="p-1 border"></th><th class="p-1 border">(19)</th><th class="p-1 border">(20)</th><th class="p-1 border">(21)</th>
+                                <th class="p-1 border">(22)</th><th class="p-1 border">(23)</th><th class="p-1 border">(24)</th>
+                                <th class="p-1 border">(25)</th><th class="p-1 border">(26)</th><th class="p-1 border">(27)</th>
+                                <th class="p-1 border">(28)</th><th class="p-1 border">(29)</th><th class="p-1 border">(30)</th>
+                                <th class="p-1 border">(31)</th><th class="p-1 border">(32)</th><th class="p-1 border">(33)</th>
+                                <th class="p-1 border">(34)</th><th class="p-1 border">(35)</th><th class="p-1 border">(36)</th>
+                                <th class="p-1 border">(37)</th><th class="p-1 border">(38)</th><th class="p-1 border"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="quadro2-tbody">
+                           </tbody>
+                         <tfoot id="quadro2-tfoot" class="bg-gray-200 font-bold text-gray-700 text-center">
+                            <tr>
+                                <td class="p-2 border" colspan="2">TOTAIS</td>
+                                <td id="total-q2-col-20" class="p-2 border">0,00</td><td id="total-q2-col-21" class="p-2 border">0,00</td><td id="total-q2-col-22" class="p-2 border">0,00</td>
+                                <td id="total-q2-col-23" class="p-2 border">0,00</td><td id="total-q2-col-24" class="p-2 border">0,00</td><td id="total-q2-col-25" class="p-2 border">0,00</td>
+                                <td id="total-q2-col-26" class="p-2 border">0,00</td><td id="total-q2-col-27" class="p-2 border">0,00</td><td id="total-q2-col-28" class="p-2 border">0,00</td>
+                                <td id="total-q2-col-29" class="p-2 border">0,00</td><td id="total-q2-col-30" class="p-2 border">0,00</td><td id="total-q2-col-31" class="p-2 border">0,0000</td>
+                                <td id="total-q2-col-32" class="p-2 border">0,00</td><td id="total-q2-col-33" class="p-2 border">0,00</td><td id="total-q2-col-34" class="p-2 border">0,00</td>
+                                <td id="total-q2-col-35" class="p-2 border">0,00</td><td id="total-q2-col-36" class="p-2 border">0,00</td><td id="total-q2-col-37" class="p-2 border">0,00</td>
+                                <td id="total-q2-col-38" class="p-2 border">0,00</td><td class="p-2 border"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="mt-6 p-4 bg-gray-100 rounded-lg text-right">
+                    <span class="text-lg font-semibold text-gray-700 mr-6">Área Construída: <span id="area-construida-q2" class="text-blue-700">0,00 m²</span></span>
+                    <span class="text-lg font-semibold text-gray-700 mr-6">Área Real Global: <span id="area-real-global-q2" class="text-blue-700">0,00 m²</span></span>
+                    <span class="text-lg font-semibold text-gray-700">Área Equivalente Global: <span id="area-equiv-global-q2" class="text-blue-700">0,00 m²</span></span>
+                </div>
+            </div>
+
+            <div id="quadro3" class="tab-content" style="display:none;">
+                <h2 class="text-xl font-semibold text-blue-700 mb-6">Quadro III: Avaliação do Custo Global e Unitário da Construção</h2>
+                <div id="quadro3-container" class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                         <h3 class="font-semibold text-gray-800 mb-3">4. Áreas Globais do Prédio Projetado (Importado do Quadro I)</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.1 Área Real Privativa, Global (QI, E5)</label><span id="q3-area-priv-real" class="font-semibold text-gray-800">0,00 m²</span></div>
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.4 Área Equivalente Privativa Global (QI, E6)</label><span id="q3-area-priv-equiv" class="font-semibold text-gray-800">0,00 m²</span></div>
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.2 Área Real de Uso Comum, Global (QI, E10 + E15)</label><span id="q3-area-comum-real" class="font-semibold text-gray-800">0,00 m²</span></div>
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.5 Área Equivalente de Uso Comum Global (QI, E11 + E16)</label><span id="q3-area-comum-equiv" class="font-semibold text-gray-800">0,00 m²</span></div>
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.3 Área Real, Global (QI, E17)</label><span id="q3-area-total-real" class="font-semibold text-gray-800">0,00 m²</span></div>
+                            <div class="flex items-center justify-between"><label class="text-gray-600">4.6 Área Equivalente Global (QI, E18)</label><span id="q3-area-total-equiv" class="font-semibold text-gray-800">0,00 m²</span></div>
+                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <label class="font-medium text-gray-700">Custo Unitário Básico (CUB) R$</label>
+                            <input type="text" inputmode="decimal" value="0,00" id="cub-input" class="w-48 text-right border-gray-300 rounded-md shadow-sm">
+                        </div>
+                         <div class="flex items-center justify-between md:col-span-2">
+                            <label class="font-medium text-gray-700">Custo Básico Global da Edificação (R$)</label>
+                            <span id="q3-custo-basico-global" class="w-48 text-right font-bold text-lg text-blue-700 calculated-cell">0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">Parcelas Adicionais</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                            <div class="flex items-center justify-between"><label>Fundações</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Elevador(es)</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Equipamentos e Instalações</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Obras e Serviços Compl.</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">Impostos, taxas e emolumentos cartoriais</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                            <div class="flex items-center justify-between"><label>Impostos, taxas e emolumentos</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Projetos</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Remuneração do Construtor</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                            <div class="flex items-center justify-between"><label>Remuneração do Incorporador</label><input type="text" inputmode="decimal" value="0,00" class="w-48 text-right border-gray-300 rounded-md shadow-sm q3-adicionais"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t-2 border-blue-500 space-y-4">
+                         <div class="flex items-center justify-between text-xl">
+                            <label class="font-bold text-gray-800">CUSTO GLOBAL DA CONSTRUÇÃO (R$)</label>
+                            <span id="q3-custo-global-construcao" class="font-extrabold text-blue-700">0,00</span>
+                        </div>
+                         <div class="flex items-center justify-between text-xl">
+                            <label class="font-bold text-gray-800">Custo unitário da obra em cálculo (R$/m²)</label>
+                            <span id="q3-custo-unitario-obra" class="font-extrabold text-blue-700">0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        let decimalPlaces = { 31: 4, 32: 2, 33: 2, 34: 2, 35: 2, 36: 2, 37: 2, 38: 2 };
+
+        /**
+         * Altera a aba visível na interface.
+         * @param {string} tabName - O ID do conteúdo da aba a ser exibida.
+         */
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(tabName).style.display = 'block';
+            const buttonToActivate = document.querySelector(`.tab-button[data-tab='${tabName}']`);
+            if (buttonToActivate) {
+                buttonToActivate.classList.add('active');
+            }
+        }
+
+        /**
+         * Centraliza todos os cálculos do Quadro I.
+         */
+        function recalculateQuadro1() {
+            const tbody = document.getElementById('quadro1-tbody');
+            const rows = tbody.querySelectorAll('tr');
+            let totals = {};
+            for(let i = 2; i <= 18; i++) totals[i] = 0;
+
+            rows.forEach(row => {
+                const getValue = (colClass) => parseFloat(row.querySelector(colClass).value.replace(',', '.')) || 0;
+                const val = {
+                    2: getValue('.col-2-input'), 3: getValue('.col-3-input'), 4: getValue('.col-4-input'),
+                    7: getValue('.col-7-input'), 8: getValue('.col-8-input'), 9: getValue('.col-9-input'),
+                    12: getValue('.col-12-input'), 13: getValue('.col-13-input'), 14: getValue('.col-14-input')
+                };
+                val[5] = val[2] + val[3];
+                val[6] = val[2] + val[4];
+                val[10] = val[7] + val[8];
+                val[11] = val[7] + val[9];
+                val[15] = val[12] + val[13];
+                val[16] = val[12] + val[14];
+                val[17] = val[5] + val[10] + val[15];
+                val[18] = val[6] + val[11] + val[16];
+
+                for(let i = 5; i <= 18; i++) {
+                    if ([5,6,10,11,15,16,17,18].includes(i)) {
+                         row.querySelector(`.col-${i}-calc`).textContent = val[i].toFixed(2).replace('.', ',');
+                    }
+                }
+                for (const col in val) {
+                    totals[col] += val[col];
+                }
+            });
+
+            for (const col in totals) {
+                const totalCell = document.getElementById(`total-col-${col}`);
+                if (totalCell) {
+                    totalCell.textContent = totals[col].toFixed(2).replace('.', ',');
+                }
+            }
+            
+            document.getElementById('area-real-global').textContent = totals[17].toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('area-equiv-global').textContent = totals[18].toFixed(2).replace('.', ',') + ' m²';
+            
+            validateAreaConstruida();
+            recalculateQuadro2();
+            recalculateQuadro3();
+        }
+
+        /**
+         * Centraliza todos os cálculos do Quadro II.
+         */
+        function recalculateQuadro2() {
+            const tbody = document.getElementById('quadro2-tbody');
+            const rows = tbody.querySelectorAll('tr');
+            let totals = {};
+            for(let i = 20; i <= 38; i++) totals[i] = 0;
+
+            const totalQ1 = {
+                12: parseFloat(document.getElementById('total-col-12').textContent.replace(',', '.')) || 0,
+                13: parseFloat(document.getElementById('total-col-13').textContent.replace(',', '.')) || 0,
+                14: parseFloat(document.getElementById('total-col-14').textContent.replace(',', '.')) || 0
+            };
+
+            rows.forEach(row => {
+                const getValue = (colClass) => parseFloat(row.querySelector(colClass).value.replace(',', '.')) || 0;
+                const val = {
+                    20: getValue('.col-20-input'), 21: getValue('.col-21-input'), 22: getValue('.col-22-input'),
+                    25: getValue('.col-25-input'), 26: getValue('.col-26-input'), 27: getValue('.col-27-input')
+                };
+                val[23] = val[20] + val[21];
+                val[24] = val[20] + val[22];
+                val[28] = val[25] + val[26];
+                val[29] = val[25] + val[27];
+                val[30] = val[24] + val[29];
+
+                row.querySelector('.col-23-calc').textContent = val[23].toFixed(2).replace('.', ',');
+                row.querySelector('.col-24-calc').textContent = val[24].toFixed(2).replace('.', ',');
+                row.querySelector('.col-28-calc').textContent = val[28].toFixed(2).replace('.', ',');
+                row.querySelector('.col-29-calc').textContent = val[29].toFixed(2).replace('.', ',');
+                row.querySelector('.col-30-calc').textContent = val[30].toFixed(2).replace('.', ',');
+                
+                for (let i = 20; i <= 30; i++) {
+                    if(val[i] !== undefined) totals[i] += val[i];
+                }
+            });
+
+            const totalCol30 = totals[30];
+            rows.forEach(row => {
+                 const val30 = parseFloat(row.querySelector('.col-30-calc').textContent.replace(',', '.')) || 0;
+                 const coefficient = totalCol30 > 0 ? val30 / totalCol30 : 0;
+                 row.querySelector('.col-31-calc').textContent = coefficient.toFixed(decimalPlaces[31]).replace('.', ',');
+                 totals[31] += coefficient;
+
+                 const val = {};
+                 val[32] = totalQ1[12] * coefficient;
+                 val[33] = totalQ1[13] * coefficient;
+                 val[34] = totalQ1[14] * coefficient;
+                 val[35] = val[32] + val[33];
+                 val[36] = val[32] + val[34];
+                 const val23 = parseFloat(row.querySelector('.col-23-calc').textContent.replace(',', '.')) || 0;
+                 const val28 = parseFloat(row.querySelector('.col-28-calc').textContent.replace(',', '.')) || 0;
+                 val[37] = val23 + val28 + val[35];
+                 val[38] = val30 + val[36];
+
+                 for(let i = 32; i <= 38; i++) {
+                    row.querySelector(`.col-${i}-calc`).textContent = val[i].toFixed(decimalPlaces[i]).replace('.', ',');
+                    totals[i] += val[i];
+                 }
+            });
+
+            for (let i = 20; i <= 38; i++) {
+                 const totalCell = document.getElementById(`total-q2-col-${i}`);
+                 if (totalCell) {
+                    totalCell.textContent = totals[i].toFixed(decimalPlaces[i] || 2).replace('.', ',');
+                 }
+            }
+            
+            document.getElementById('area-real-global-q2').textContent = totals[37].toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('area-equiv-global-q2').textContent = totals[38].toFixed(2).replace('.', ',') + ' m²';
+        }
+
+        /**
+        * Centraliza todos os cálculos do Quadro III.
+        */
+        function recalculateQuadro3() {
+            // Update areas from Quadro I totals
+            const totalCol5 = parseFloat(document.getElementById('total-col-5').textContent.replace(',', '.')) || 0;
+            const totalCol6 = parseFloat(document.getElementById('total-col-6').textContent.replace(',', '.')) || 0;
+            const totalCol10 = parseFloat(document.getElementById('total-col-10').textContent.replace(',', '.')) || 0;
+            const totalCol11 = parseFloat(document.getElementById('total-col-11').textContent.replace(',', '.')) || 0;
+            const totalCol15 = parseFloat(document.getElementById('total-col-15').textContent.replace(',', '.')) || 0;
+            const totalCol16 = parseFloat(document.getElementById('total-col-16').textContent.replace(',', '.')) || 0;
+            const totalCol17 = parseFloat(document.getElementById('total-col-17').textContent.replace(',', '.')) || 0;
+            const totalCol18 = parseFloat(document.getElementById('total-col-18').textContent.replace(',', '.')) || 0;
+
+            document.getElementById('q3-area-priv-real').textContent = totalCol5.toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('q3-area-priv-equiv').textContent = totalCol6.toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('q3-area-comum-real').textContent = (totalCol10 + totalCol15).toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('q3-area-comum-equiv').textContent = (totalCol11 + totalCol16).toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('q3-area-total-real').textContent = totalCol17.toFixed(2).replace('.', ',') + ' m²';
+            document.getElementById('q3-area-total-equiv').textContent = totalCol18.toFixed(2).replace('.', ',') + ' m²';
+
+            // Perform cost calculations
+            const areaEquivGlobal = totalCol18;
+            const cubValor = parseFloat(document.getElementById('cub-input').value.replace(',', '.')) || 0;
+            
+            const custoBasicoGlobal = areaEquivGlobal * cubValor;
+            
+            let somaAdicionais = 0;
+            document.querySelectorAll('.q3-adicionais').forEach(input => {
+                somaAdicionais += parseFloat(input.value.replace(',', '.')) || 0;
+            });
+
+            const custoGlobalConstrucao = custoBasicoGlobal + somaAdicionais;
+            const custoUnitarioObra = areaEquivGlobal > 0 ? custoGlobalConstrucao / areaEquivGlobal : 0;
+
+            document.getElementById('q3-custo-basico-global').textContent = custoBasicoGlobal.toFixed(2).replace('.', ',');
+            document.getElementById('q3-custo-global-construcao').textContent = custoGlobalConstrucao.toFixed(2).replace('.', ',');
+            document.getElementById('q3-custo-unitario-obra').textContent = custoUnitarioObra.toFixed(2).replace('.', ',');
+        }
+        
+        /**
+         * Valida a área construída e a área do lote, aplicando cores.
+         */
+        function validateAreaConstruida() {
+            const areaAlvara = parseFloat(document.getElementById('area-alvara').value.replace(',', '.')) || 0;
+            const areaLote = parseFloat(document.getElementById('area-lote').value.replace(',', '.')) || 0;
+            
+            const totalCol2 = parseFloat(document.getElementById('total-col-2').textContent.replace(',', '.')) || 0;
+            const totalCol7 = parseFloat(document.getElementById('total-col-7').textContent.replace(',', '.')) || 0;
+            const totalCol12 = parseFloat(document.getElementById('total-col-12').textContent.replace(',', '.')) || 0;
+            const areaConstruidaCalculada = totalCol2 + totalCol7 + totalCol12;
+
+            const areaConstruidaQ1 = document.getElementById('area-construida-q1');
+            const areaConstruidaQ2 = document.getElementById('area-construida-q2');
+            
+            areaConstruidaQ1.textContent = areaConstruidaCalculada.toFixed(2).replace('.', ',') + ' m²';
+            areaConstruidaQ2.textContent = areaConstruidaCalculada.toFixed(2).replace('.', ',') + ' m²';
+            
+            const isMatchConstruida = Math.abs(areaAlvara - areaConstruidaCalculada) < 0.01;
+            
+            const elementsToColorConstruida = [
+                areaConstruidaQ1, areaConstruidaQ2,
+                document.getElementById('total-col-2'),
+                document.getElementById('total-col-7'),
+                document.getElementById('total-col-12')
+            ];
+
+            elementsToColorConstruida.forEach(el => {
+                el.classList.remove('valid', 'invalid');
+                if (areaAlvara > 0) {
+                    el.classList.add(isMatchConstruida ? 'valid' : 'invalid');
+                }
+            });
+
+            // Validação do Lote vs Térreo
+            const validacaoLoteQ1 = document.getElementById('validacao-lote-q1');
+            let terreoRow = null;
+            document.querySelectorAll('#quadro1-tbody tr').forEach(row => {
+                const pavNome = row.querySelector('.table-input-text').value.toLowerCase();
+                if (pavNome.includes('térreo') || pavNome.includes('terreo')) {
+                    terreoRow = row;
+                }
+            });
+
+            if (terreoRow && areaLote > 0) {
+                const areaTotalTerreo = parseFloat(terreoRow.querySelector('.col-17-calc').textContent.replace(',', '.')) || 0;
+                const isMatchLote = Math.abs(areaLote - areaTotalTerreo) < 0.01;
+                validacaoLoteQ1.textContent = isMatchLote ? 'OK' : 'Divergente';
+                validacaoLoteQ1.classList.remove('valid', 'invalid', 'text-blue-700');
+                validacaoLoteQ1.classList.add(isMatchLote ? 'valid' : 'invalid');
+                terreoRow.querySelector('.col-17-calc').classList.remove('valid', 'invalid');
+                terreoRow.querySelector('.col-17-calc').classList.add(isMatchLote ? 'valid' : 'invalid');
+            } else {
+                 validacaoLoteQ1.textContent = 'N/A';
+                 validacaoLoteQ1.classList.remove('valid', 'invalid');
+                 validacaoLoteQ1.classList.add('text-blue-700');
+            }
+        }
+
+        function handleFocus(event) {
+            if (event.target.matches('.table-input, input[type=text][inputmode=decimal]')) {
+                 setTimeout(() => {
+                    event.target.select();
+                }, 0);
+            }
+        }
+
+        function handleBlur(event) {
+            if (event.target.matches('.table-input, input[type=text][inputmode=decimal]')) {
+                const value = parseFloat(event.target.value.replace(',', '.')) || 0;
+                event.target.value = value.toFixed(2).replace('.', ',');
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            openTab('quadro1');
+
+            const btnConfigurar = document.getElementById('btn-configurar-pavimentos');
+            const btnGerar = document.getElementById('btn-gerar-quadros');
+            const detalhesContainer = document.getElementById('detalhes-pavimentos-container');
+            const gerarContainer = document.getElementById('gerar-quadros-container');
+            const numTotalPavimentosInput = document.getElementById('num-total-pavimentos');
+            const quadro1Tbody = document.getElementById('quadro1-tbody');
+            const quadro2Tbody = document.getElementById('quadro2-tbody');
+            const quadro2Thead = document.querySelector('#quadro2 thead');
+            const quadro3Container = document.getElementById('quadro3-container');
+            let lastEnterTimestamp = 0;
+            let lastEnterTarget = null;
+            
+            // Listeners for Quadro I
+            quadro1Tbody.addEventListener('change', (event) => {
+                if (event.target.classList.contains('table-input')) recalculateQuadro1();
+            });
+            quadro1Tbody.addEventListener('focusin', handleFocus);
+            quadro1Tbody.addEventListener('focusout', handleBlur);
+            quadro1Tbody.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    if (event.target.classList.contains('table-input')) {
+                        event.preventDefault();
+                        const inputs = Array.from(quadro1Tbody.querySelectorAll('.table-input'));
+                        const currentIndex = inputs.indexOf(event.target);
+                        const currentRow = event.target.closest('tr');
+                        const allRows = Array.from(quadro1Tbody.querySelectorAll('tr'));
+                        const rowIndex = allRows.indexOf(currentRow);
+                        const inputsInRow = Array.from(currentRow.querySelectorAll('.table-input'));
+                        const colIndex = inputsInRow.indexOf(event.target);
+                        
+                        if (rowIndex < allRows.length - 1) {
+                            const nextRow = allRows[rowIndex + 1];
+                            const nextInput = nextRow.querySelectorAll('.table-input')[colIndex];
+                            if(nextInput) nextInput.focus();
+                        } else {
+                             if (colIndex < inputsInRow.length - 1) {
+                                const firstRow = allRows[0];
+                                const nextInput = firstRow.querySelectorAll('.table-input')[colIndex + 1];
+                                if(nextInput) nextInput.focus();
+                             } else {
+                                const now = new Date().getTime();
+                                if(lastEnterTarget === event.target && (now - lastEnterTimestamp) < 500) {
+                                    openTab('quadro2');
+                                }
+                                lastEnterTimestamp = now;
+                                lastEnterTarget = event.target;
+                             }
+                        }
+                    }
+                }
+            });
+            
+            // Listeners for Quadro II
+            quadro2Tbody.addEventListener('change', (event) => {
+                if (event.target.classList.contains('table-input')) recalculateQuadro2();
+            });
+            quadro2Tbody.addEventListener('focusin', handleFocus);
+            quadro2Tbody.addEventListener('focusout', handleBlur);
+             quadro2Tbody.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    if (event.target.classList.contains('table-input')) {
+                        event.preventDefault();
+                        const inputs = Array.from(quadro2Tbody.querySelectorAll('.table-input'));
+                        const currentIndex = inputs.indexOf(event.target);
+                        const currentRow = event.target.closest('tr');
+                        const allRows = Array.from(quadro2Tbody.querySelectorAll('tr'));
+                        const rowIndex = allRows.indexOf(currentRow);
+                        const inputsInRow = Array.from(currentRow.querySelectorAll('.table-input'));
+                        const colIndex = inputsInRow.indexOf(event.target);
+                        
+                        if (rowIndex < allRows.length - 1) {
+                            const nextRow = allRows[rowIndex + 1];
+                            const nextInput = nextRow.querySelectorAll('.table-input')[colIndex];
+                            if(nextInput) nextInput.focus();
+                        } else {
+                             if (colIndex < inputsInRow.length - 1) {
+                                const firstRow = allRows[0];
+                                const nextInput = firstRow.querySelectorAll('.table-input')[colIndex + 1];
+                                if(nextInput) nextInput.focus();
+                             } else {
+                                 const now = new Date().getTime();
+                                if(lastEnterTarget === event.target && (now - lastEnterTimestamp) < 500) {
+                                    openTab('quadro3');
+                                }
+                                lastEnterTimestamp = now;
+                                lastEnterTarget = event.target;
+                             }
+                        }
+                    }
+                }
+            });
+            
+            // Listeners for decimal places buttons
+            quadro2Thead.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.tagName === 'BUTTON') {
+                    const col = target.dataset.col;
+                    const action = target.dataset.action;
+                    if (action === 'inc' && decimalPlaces[col] < 10) {
+                        decimalPlaces[col]++;
+                    } else if (action === 'dec' && decimalPlaces[col] > 2) {
+                        decimalPlaces[col]--;
+                    }
+                    recalculateQuadro2();
+                }
+            });
+
+            // Listeners for Quick Fill Tools in Quadro II
+            document.getElementById('btn-aplicar-20').addEventListener('click', () => {
+                const valor = document.getElementById('valor-padrao-20').value;
+                document.querySelectorAll('#quadro2-tbody .q2-checkbox:checked').forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    row.querySelector('.col-20-input').value = valor;
+                });
+                recalculateQuadro2();
+            });
+
+            document.getElementById('btn-aplicar-vaga').addEventListener('click', () => {
+                const val25 = document.getElementById('valor-padrao-25').value;
+                const val26 = document.getElementById('valor-padrao-26').value;
+                const val27 = document.getElementById('valor-padrao-27').value;
+                document.querySelectorAll('#quadro2-tbody .q2-checkbox:checked').forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    row.querySelector('.col-25-input').value = val25;
+                    row.querySelector('.col-26-input').value = val26;
+                    row.querySelector('.col-27-input').value = val27;
+                });
+                recalculateQuadro2();
+            });
+            
+            document.getElementById('selecionar-todos-q2').addEventListener('change', (event) => {
+                document.querySelectorAll('#quadro2-tbody .q2-checkbox').forEach(checkbox => {
+                    checkbox.checked = event.target.checked;
+                });
+            });
+
+
+            // Listeners for Quadro III and Alvará Area
+            quadro3Container.addEventListener('change', (event) => {
+                if(event.target.matches('input, select')) {
+                    recalculateQuadro3();
+                }
+            });
+             quadro3Container.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter' && event.target.matches('input, select')) {
+                    event.target.blur();
+                }
+            });
+            document.getElementById('area-alvara').addEventListener('change', validateAreaConstruida);
+            document.getElementById('area-lote').addEventListener('change', validateAreaConstruida);
+
+
+            btnConfigurar.addEventListener('click', () => {
+                const numTotal = parseInt(numTotalPavimentosInput.value) || 0;
+                detalhesContainer.innerHTML = ''; 
+
+                if (numTotal > 0) {
+                    let html = '<h3 class="text-lg font-semibold text-gray-700 mb-2">Detalhe os Pavimentos</h3>';
+                    for (let i = 0; i < numTotal; i++) {
+                        html += `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 border rounded-md bg-white shadow-sm">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500">Nome do Pavimento ${i + 1}</label>
+                                    <input type="text" placeholder="Ex: Térreo" class="pav-nome mt-1 block w-full px-2 py-1 border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500">Qtd. de Unidades neste Pavimento</label>
+                                    <input type="number" value="0" min="0" class="pav-qtd-unidades mt-1 block w-full px-2 py-1 border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500">Prefixo/Início da Numeração</label>
+                                    <input type="number" value="${i+1}01" class="pav-prefixo mt-1 block w-full px-2 py-1 border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                            </div>
+                        `;
+                    }
+                    detalhesContainer.innerHTML = html;
+                    gerarContainer.style.display = 'block';
+                } else {
+                    gerarContainer.style.display = 'none';
+                }
+            });
+
+            btnGerar.addEventListener('click', () => {
+                const tbody1 = document.getElementById('quadro1-tbody');
+                const tbody2 = document.getElementById('quadro2-tbody');
+                tbody1.innerHTML = '';
+                tbody2.innerHTML = '';
+
+                const pavimentos = document.querySelectorAll('#detalhes-pavimentos-container > div');
+                
+                pavimentos.forEach(pav => {
+                    const nome = pav.querySelector('.pav-nome').value || 'Pavimento';
+                    const qtdUnidadesPorPav = parseInt(pav.querySelector('.pav-qtd-unidades').value) || 0;
+                    const prefixo = parseInt(pav.querySelector('.pav-prefixo').value);
+
+                    const newRow1 = document.createElement('tr');
+                    newRow1.className = 'text-center';
+                    newRow1.innerHTML = `
+                        <td class="p-1 border"><input type="text" value="${nome}" class="table-input-text"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-2-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-3-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-4-input"></td>
+                        <td class="calculated-cell border col-5-calc">0,00</td>
+                        <td class="calculated-cell border col-6-calc">0,00</td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-7-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-8-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-9-input"></td>
+                        <td class="calculated-cell border col-10-calc">0,00</td>
+                        <td class="calculated-cell border col-11-calc">0,00</td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-12-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-13-input"></td>
+                        <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-14-input"></td>
+                        <td class="calculated-cell border col-15-calc">0,00</td>
+                        <td class="calculated-cell border col-16-calc">0,00</td>
+                        <td class="calculated-cell border col-17-calc">0,00</td>
+                        <td class="calculated-cell border col-18-calc">0,00</td>
+                        <td class="calculated-cell border">1</td>
+                    `;
+                    tbody1.appendChild(newRow1);
+                    
+                    for (let i = 0; i < qtdUnidadesPorPav; i++) {
+                        const newRow2 = document.createElement('tr');
+                        newRow2.className = 'text-center';
+                        const unitName = !isNaN(prefixo) ? prefixo + i : `Unid. ${i+1} do Pav. ${nome}`;
+                        newRow2.innerHTML = `
+                            <td class="p-1 border"><input type="checkbox" class="h-4 w-4 q2-checkbox"></td>
+                            <td class="p-1 border"><input type="text" value="${unitName}" class="table-input-text"></td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-20-input"></td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-21-input"></td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-22-input"></td>
+                            <td class="calculated-cell border col-23-calc">0,00</td>
+                            <td class="calculated-cell border col-24-calc">0,00</td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-25-input"></td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-26-input"></td>
+                            <td class="p-1 border"><input type="text" inputmode="decimal" value="0,00" class="table-input col-27-input"></td>
+                            <td class="calculated-cell border col-28-calc">0,00</td>
+                            <td class="calculated-cell border col-29-calc">0,00</td>
+                            <td class="calculated-cell border col-30-calc">0,00</td>
+                            <td class="calculated-cell border col-31-calc">0,0000</td>
+                            <td class="calculated-cell border col-32-calc">0,00</td>
+                            <td class="calculated-cell border col-33-calc">0,00</td>
+                            <td class="calculated-cell border col-34-calc">0,00</td>
+                            <td class="calculated-cell border col-35-calc">0,00</td>
+                            <td class="calculated-cell border col-36-calc">0,00</td>
+                            <td class="calculated-cell border col-37-calc">0,00</td>
+                            <td class="calculated-cell border col-38-calc">0,00</td>
+                            <td class="p-1 border"><input type="number" step="1" value="1" class="table-input"></td>
+                        `;
+                        tbody2.appendChild(newRow2);
+                    }
+                });
+                
+                recalculateQuadro1();
+                recalculateQuadro2();
+
+                alert(`${pavimentos.length} pavimentos configurados, gerando ${tbody1.rows.length} linha(s) no Quadro I e ${tbody2.rows.length} linha(s) no Quadro II.`);
+            });
+        });
+    </script>
+
+</body>
+</html>
